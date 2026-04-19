@@ -22,17 +22,19 @@ public class UserService implements IUserService{
 
     @Override
     public UserDTO save(NewUserDTO newUserDTO) {
+        System.out.println(newUserDTO);
         UserEntity saved = userRepository.save(newUserMapper.toEntity(newUserDTO));
+        System.out.println(saved);
 
         return userMapper.toDTO(saved);
     }
 
     @Override
     public void delete(UUID userId) {
-        if (!userRepository.existsByExternalId(userId))
-            throw new EntityNotFoundException("User","User was not found","userId", userId.toString());
+        UserEntity user = userRepository.findByExternalId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User","User was not found","userId", userId.toString()));
 
-        userRepository.deleteByExternalId(userId);
+        userRepository.delete(user);
     }
 
     @Override

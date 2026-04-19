@@ -22,14 +22,19 @@ public class UserEntity {
     private Long id;
 
     @Column(name = "external_id", nullable = false, unique = true, updatable = false)
-    private UUID externalId = UUID.randomUUID();
+    private UUID externalId;
 
     @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "email_address", unique = true))
+    @AttributeOverride(name = "value", column = @Column(name = "email_address", unique = true, nullable = false))
     private Email email;
 
     @OneToMany(mappedBy = "user")
     private List<SubscriptionEntity> subscriptions;
 
+    @PrePersist
+    void onCreate() {
+        if (externalId == null)
+            externalId = UUID.randomUUID();
+    }
     /// Valores basicos, el resto se agregaran con Spring Security
 }
