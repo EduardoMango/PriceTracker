@@ -1,4 +1,4 @@
-package com.eduardomango.pricetracker.pricehistory;
+package com.eduardomango.pricetracker.pricehistory.domain;
 
 import com.eduardomango.pricetracker.common.model.Price;
 import com.eduardomango.pricetracker.product.domain.ProductEntity;

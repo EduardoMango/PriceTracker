@@ -1,13 +1,12 @@
-package com.eduardomango.pricetracker.product;
+package com.eduardomango.pricetracker.product.domain;
 
 
 import com.eduardomango.pricetracker.common.model.Price;
-import com.eduardomango.pricetracker.price.PriceHistory;
-import com.eduardomango.pricetracker.subscription.SubscriptionEntity;
+import com.eduardomango.pricetracker.pricehistory.domain.PriceHistory;
+import com.eduardomango.pricetracker.subscription.domain.SubscriptionEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,9 +24,8 @@ public class ProductEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "external_id", nullable = false, unique = true)
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID externalId;
+    @Column(name = "external_id", nullable = false, unique = true, updatable = false)
+    private UUID externalId = UUID.randomUUID();
 
     private String name;
 

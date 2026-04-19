@@ -1,8 +1,8 @@
-package com.eduardomango.pricetracker.subscription;
+package com.eduardomango.pricetracker.subscription.domain;
 
 import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import com.eduardomango.pricetracker.product.domain.AlertCondition;
-import com.eduardomango.pricetracker.user.UserEntity;
+import com.eduardomango.pricetracker.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

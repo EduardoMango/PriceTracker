@@ -1,7 +1,7 @@
-package com.eduardomango.pricetracker.user;
+package com.eduardomango.pricetracker.user.domain;
 
 import com.eduardomango.pricetracker.common.model.Email;
-import com.eduardomango.pricetracker.subscription.SubscriptionEntity;
+import com.eduardomango.pricetracker.subscription.domain.SubscriptionEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,9 +21,8 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "external_id", nullable = false, unique = true)
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID externalId;
+    @Column(name = "external_id", nullable = false, unique = true, updatable = false)
+    private UUID externalId = UUID.randomUUID();
 
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "email_address", unique = true))
