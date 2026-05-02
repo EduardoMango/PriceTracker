@@ -1,6 +1,8 @@
 package com.eduardomango.pricetracker.common.handlers;
 
 import com.eduardomango.pricetracker.common.exceptions.EntityNotFoundException;
+import com.eduardomango.pricetracker.common.exceptions.ParseException;
+import com.eduardomango.pricetracker.common.exceptions.UnsuportedWebsite;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -54,6 +56,9 @@ public class GlobalExceptionHandler {
         if (root != null && root.getMessage().contains("email_address")) {
             message = "Email already exists";
         }
+        else if (root != null && root.getMessage().contains("url")) {
+            message = "Product already exists";
+        }
 
         problem.setTitle("Conflict");
         problem.setDetail(message);
@@ -64,6 +69,30 @@ public class GlobalExceptionHandler {
         problem.setProperty("method", request.getMethod());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
+
+    @ExceptionHandler(UnsuportedWebsite.class)
+    public ResponseEntity<ProblemDetail> handleUnsuportedWebsite(UnsuportedWebsite ex, HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Website not supported");
+        problem.setDetail(ex.getMessage());
+        problem.setType(URI.create("https://api.tuapp.com/errors/website-not-supported"));
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty("method", request.getMethod());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(problem);
+    }
+
+    @ExceptionHandler(ParseException.class)
+    public ResponseEntity<ProblemDetail> handleParseException(ParseException ex, HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Parse error");
+        problem.setDetail(ex.getMessage());
+        problem.setType(URI.create("https://api.tuapp.com/errors/parse-error"));
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty("method", request.getMethod());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 
 
