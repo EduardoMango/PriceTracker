@@ -15,7 +15,8 @@ public class ClientConfig {
     public WebClientCustomizer webClientCustomizer() {
         return builder -> builder
                 .defaultHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (PriceTracker/1.0)")
-                .defaultHeader(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE);
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE)
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(5 * 1024 * 1024));
     }
 
 }

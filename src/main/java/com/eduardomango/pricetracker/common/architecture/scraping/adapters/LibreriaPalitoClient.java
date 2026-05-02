@@ -1,7 +1,6 @@
 package com.eduardomango.pricetracker.common.architecture.scraping.adapters;
 
 import com.eduardomango.pricetracker.common.architecture.scraping.ClientService;
-import com.eduardomango.pricetracker.common.exceptions.EntityNotFoundException;
 import com.eduardomango.pricetracker.common.exceptions.ParseException;
 import com.eduardomango.pricetracker.common.exceptions.UnsuportedWebsite;
 import com.eduardomango.pricetracker.common.model.Price;
@@ -22,59 +21,53 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class BuscaLibreClient implements ClientService {
+public class LibreriaPalitoClient implements ClientService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
-    public BuscaLibreClient(WebClient.Builder builder , ObjectMapper objectMapper) {
+    public LibreriaPalitoClient(WebClient.Builder builder, ObjectMapper objectMapper) {
         this.webClient = builder
-                .baseUrl("https://www.buscalibre.com.ar")
+                .baseUrl("https://www.libreriapalito.com.ar")
                 .build();
         this.objectMapper = objectMapper;
-
     }
 
     @Override
     public boolean supports(URI url) {
-        return url.getHost() != null && url.getHost().endsWith("buscalibre.com.ar");
+        return url.getHost() != null && url.getHost().endsWith("libreriapalito.com.ar");
     }
 
     @Override
     public ProductEntity getProduct(URI url) {
-
         if (!supports(url)) throw new UnsuportedWebsite(url.getHost());
 
-        //Retrieve the HTML content of the page
         String html = webClient.get()
                 .uri(url)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
 
-
-
-        //Parse the HTML content using Jsoup
         assert html != null;
         Document doc = Jsoup.parse(html);
 
+        // 1. Search script that contains product detail
         String scriptContent = doc.select("script").stream()
                 .map(Element::html)
-                .filter(content -> content.contains("dataLayer = [{"))
+                .filter(content -> content.contains("var productDetail ="))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Product", "Product was not found", "url", url.toString()));
+                .orElseThrow(() -> new RuntimeException("No se encontró el detalle del producto"));
 
+        ProductEntity p = parseProductDetail(scriptContent);
+        p.setUrl(new URL(url.toString()));
 
-        ProductEntity product = parseDataLayer(scriptContent);
-        product.setUrl(new URL(url.toString()));
-
-        return product;
+        return p;
     }
 
-    private ProductEntity parseDataLayer(String script) {
+    private ProductEntity parseProductDetail(String script) {
         try {
-            // Regex needs to be flexible with spaces and newlines because of the JSON structure
-            Pattern pattern = Pattern.compile("'items'\\s*:\\s*\\[\\s*(\\{.*?})\\s*]", Pattern.DOTALL);
+            // Extract the JSON part of the script
+            Pattern pattern = Pattern.compile("var productDetail = (\\{.*?});");
             Matcher matcher = pattern.matcher(script);
 
             if (matcher.find()) {
@@ -89,6 +82,7 @@ public class BuscaLibreClient implements ClientService {
                 product.setCurrentPrice(new Price(price, "ARS"));
                 product.setLastChecked(LocalDateTime.now());
 
+
                 return product;
             }
         } catch (Exception e) {
@@ -96,28 +90,4 @@ public class BuscaLibreClient implements ClientService {
         }
         throw new ParseException("JSON not found for product");
     }
-
-    //Legacy approach using regex
-//    private ProductEntity parseDataLayer(String script) {
-//        // Use regex to extract the data
-//        String name = extractValue(script, "'item_name': '(.*?)'");
-//        String price = extractValue(script, "'price': (\\d+\\.?\\d*)");
-//
-//        ProductEntity product = new ProductEntity();
-//        product.setName(name);
-//        product.setCurrentPrice(new Price(new BigDecimal(price), "ARS"));
-//        product.setLastChecked(LocalDateTime.now());
-//
-//        return product;
-//    }
-//
-//    private String extractValue(String text, String regex) {
-//        Pattern pattern = Pattern.compile(regex);
-//        Matcher matcher = pattern.matcher(text);
-//        if (matcher.find()) {
-//            return matcher.group(1);
-//        }
-//        return "";
-//    }
-
 }
