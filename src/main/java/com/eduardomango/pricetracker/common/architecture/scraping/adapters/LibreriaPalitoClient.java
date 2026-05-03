@@ -51,7 +51,10 @@ public class LibreriaPalitoClient implements ClientService {
         assert html != null;
         Document doc = Jsoup.parse(html);
 
-        // 1. Search script that contains product detail
+        // Get description. It is outside of the product detail script
+        String description = doc.select("meta[name=description]").attr("content");
+
+        // Search script that contains product detail
         String scriptContent = doc.select("script").stream()
                 .map(Element::html)
                 .filter(content -> content.contains("var productDetail ="))
@@ -59,7 +62,9 @@ public class LibreriaPalitoClient implements ClientService {
                 .orElseThrow(() -> new RuntimeException("No se encontró el detalle del producto"));
 
         ProductEntity p = parseProductDetail(scriptContent);
+
         p.setUrl(new URL(url.toString()));
+        p.setDescription(description);
 
         return p;
     }
@@ -80,6 +85,7 @@ public class LibreriaPalitoClient implements ClientService {
 
                 BigDecimal price = new BigDecimal(node.get("price").asString());
                 product.setCurrentPrice(new Price(price, "ARS"));
+
                 product.setLastChecked(LocalDateTime.now());
 
 
