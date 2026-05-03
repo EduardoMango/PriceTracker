@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,8 +19,13 @@ public class ProductController {
     private final IProductService productService;
 
     @GetMapping()
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(required = false) String name,
+                                                                @RequestParam(required = false) String nameMatch,
+                                                                @RequestParam(required = false) String description,
+                                                                @RequestParam(required = false) BigDecimal minPrice,
+                                                                @RequestParam(required = false)BigDecimal maxPrice) {
+
+        return ResponseEntity.ok(productService.getAllProducts(name, nameMatch, description, minPrice, maxPrice));
     }
 
     @GetMapping("{productId}")

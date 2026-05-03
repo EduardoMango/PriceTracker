@@ -58,6 +58,9 @@ public class BuscaLibreClient implements ClientService {
         assert html != null;
         Document doc = Jsoup.parse(html);
 
+        // Get description. It is outside the dataLayer script
+        String description = doc.select("meta[name=description]").attr("content");
+
         String scriptContent = doc.select("script").stream()
                 .map(Element::html)
                 .filter(content -> content.contains("dataLayer = [{"))
@@ -66,7 +69,9 @@ public class BuscaLibreClient implements ClientService {
 
 
         ProductEntity product = parseDataLayer(scriptContent);
+
         product.setUrl(new URL(url.toString()));
+        product.setDescription(description);
 
         return product;
     }

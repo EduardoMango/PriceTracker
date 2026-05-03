@@ -7,5 +7,5 @@ import com.eduardomango.pricetracker.product.domain.URL;
 
 import java.util.UUID;
 
-public record ProductResponse(UUID productId, String name, URL url, ProductStatus status, PriceDTO price) {
+public record ProductResponse(UUID productId, String name, URL url, ProductStatus status, PriceDTO price, String description) {
 }

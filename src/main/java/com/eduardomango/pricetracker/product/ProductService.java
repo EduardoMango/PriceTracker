@@ -8,6 +8,7 @@ import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import com.eduardomango.pricetracker.product.domain.dto.ProductRequest;
 import com.eduardomango.pricetracker.product.domain.dto.ProductResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,10 +26,26 @@ public class ProductService implements IProductService{
     private final ClientOrchestrator clientOrchestrator;
 
     @Override
-    public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll().stream()
+    public List<ProductResponse> getAllProducts(String name,
+                                                String nameMatch,
+                                                String description,
+                                                BigDecimal minPrice,
+                                                BigDecimal maxPrice) {
+
+        //Apply all optional filters
+        Specification<ProductEntity> spec = Specification.allOf(
+                ProductSpecification.nameContains(name),
+                ProductSpecification.nameEquals(nameMatch),
+                ProductSpecification.descriptionContains(description),
+                ProductSpecification.priceGreaterThan(minPrice),
+                ProductSpecification.priceLessThan(maxPrice)
+        );
+
+
+        return productRepository.findAll(spec).stream()
                 .map(responseMapper::toDTO)
                 .toList();
+
     }
 
     @Override
@@ -43,16 +60,9 @@ public class ProductService implements IProductService{
     @Override
     public ProductResponse save(ProductRequest productRequest) {
 
-        URI url = URI.create(productRequest.url().value());
-
-        System.out.println(url);
-
-        //These lines were added to test the price
-        ProductEntity toBeSaved = clientOrchestrator.scrape(url);
-
-        System.out.println(toBeSaved);
-
+        ProductEntity toBeSaved = clientOrchestrator.scrape(URI.create(productRequest.url().value()));
         ProductEntity saved = productRepository.save(toBeSaved);
+
         return responseMapper.toDTO(saved);
     }
 
