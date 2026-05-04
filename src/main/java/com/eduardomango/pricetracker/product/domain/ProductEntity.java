@@ -43,6 +43,9 @@ public class ProductEntity {
     })
     private Price currentPrice;
 
+    @Lob
+    private String description;
+
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
 
