@@ -26,6 +26,8 @@ public class LibreriaPalitoClient implements ClientService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
+    private static final Pattern PRICE_PATTERN = Pattern.compile("[\"']price[\"']\\s*:\\s*\"?([\\d.]+)\"?");
+
     public LibreriaPalitoClient(WebClient.Builder builder, ObjectMapper objectMapper) {
         this.webClient = builder
                 .baseUrl("https://www.libreriapalito.com.ar")
@@ -40,6 +42,35 @@ public class LibreriaPalitoClient implements ClientService {
 
     @Override
     public ProductEntity getProduct(URI url) {
+        String html = fetchHtml(url);
+        Document doc = Jsoup.parse(html);
+
+        // Extraemos el script completo para el primer registro del producto
+        String scriptContent = extractProductDetailScript(doc);
+
+        ProductEntity p = parseProductDetail(scriptContent);
+        p.setUrl(new URL(url.toString()));
+        p.setDescription(doc.select("meta[name=description]").attr("content"));
+
+        return p;
+    }
+
+    @Override
+    public Price getPrice(URI url) {
+        String html = fetchHtml(url);
+
+        // Use regex to find the price
+        Matcher matcher = PRICE_PATTERN.matcher(html);
+        if (matcher.find()) {
+            return new Price(new BigDecimal(matcher.group(1)), "ARS");
+        }
+
+        // If price is not found, you can log the HTML snippet for debugging
+        // System.out.println("HTML Snippet: " + html.substring(0, Math.min(html.length(), 1000)));
+        throw new ParseException("Price not found in HTML: ");
+    }
+
+    private String fetchHtml(URI url) {
         if (!supports(url)) throw new UnsuportedWebsite(url.getHost());
 
         String html = webClient.get()
@@ -48,25 +79,16 @@ public class LibreriaPalitoClient implements ClientService {
                 .bodyToMono(String.class)
                 .block();
 
-        assert html != null;
-        Document doc = Jsoup.parse(html);
+        if (html == null) throw new ParseException("Null html response from Libreria Palito");
+        return html;
+    }
 
-        // Get description. It is outside of the product detail script
-        String description = doc.select("meta[name=description]").attr("content");
-
-        // Search script that contains product detail
-        String scriptContent = doc.select("script").stream()
+    private String extractProductDetailScript(Document doc) {
+        return doc.select("script").stream()
                 .map(Element::html)
                 .filter(content -> content.contains("var productDetail ="))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("No se encontró el detalle del producto"));
-
-        ProductEntity p = parseProductDetail(scriptContent);
-
-        p.setUrl(new URL(url.toString()));
-        p.setDescription(description);
-
-        return p;
+                .orElseThrow(() -> new ParseException("No se encontró el script 'productDetail'"));
     }
 
     private ProductEntity parseProductDetail(String script) {

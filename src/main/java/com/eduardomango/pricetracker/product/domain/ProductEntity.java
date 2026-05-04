@@ -43,7 +43,7 @@ public class ProductEntity {
     })
     private Price currentPrice;
 
-    @Column(nullable = true, length = 2048)
+    @Lob
     private String description;
 
     @Enumerated(EnumType.STRING)

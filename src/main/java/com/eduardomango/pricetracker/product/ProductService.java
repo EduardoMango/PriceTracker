@@ -3,12 +3,11 @@ package com.eduardomango.pricetracker.product;
 import com.eduardomango.pricetracker.common.architecture.scraping.ClientOrchestrator;
 import com.eduardomango.pricetracker.common.exceptions.EntityNotFoundException;
 import com.eduardomango.pricetracker.common.model.IMapper;
-import com.eduardomango.pricetracker.common.model.Price;
 import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import com.eduardomango.pricetracker.product.domain.dto.ProductRequest;
 import com.eduardomango.pricetracker.product.domain.dto.ProductResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.PredicateSpecification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,7 +20,6 @@ import java.util.UUID;
 public class ProductService implements IProductService{
 
     private final ProductRepository productRepository;
-    private final IMapper<ProductEntity, ProductRequest> requestMapper;
     private final IMapper<ProductEntity, ProductResponse> responseMapper;
     private final ClientOrchestrator clientOrchestrator;
 
@@ -33,12 +31,12 @@ public class ProductService implements IProductService{
                                                 BigDecimal maxPrice) {
 
         //Apply all optional filters
-        Specification<ProductEntity> spec = Specification.allOf(
+        PredicateSpecification<ProductEntity> spec = PredicateSpecification.allOf(
                 ProductSpecification.nameContains(name),
                 ProductSpecification.nameEquals(nameMatch),
                 ProductSpecification.descriptionContains(description),
                 ProductSpecification.priceGreaterThan(minPrice),
-                ProductSpecification.priceLessThan(maxPrice)
+                ProductSpecification.priceLesserThan(maxPrice)
         );
 
 
@@ -60,7 +58,7 @@ public class ProductService implements IProductService{
     @Override
     public ProductResponse save(ProductRequest productRequest) {
 
-        ProductEntity toBeSaved = clientOrchestrator.scrape(URI.create(productRequest.url().value()));
+        ProductEntity toBeSaved = clientOrchestrator.getProduct(URI.create(productRequest.url().value()));
         ProductEntity saved = productRepository.save(toBeSaved);
 
         return responseMapper.toDTO(saved);
@@ -74,4 +72,7 @@ public class ProductService implements IProductService{
 
         productRepository.delete(toBeDeleted);
     }
+
+
 }
+

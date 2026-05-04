@@ -1,6 +1,7 @@
 package com.eduardomango.pricetracker.common.architecture.scraping;
 
 import com.eduardomango.pricetracker.common.exceptions.UnsuportedWebsite;
+import com.eduardomango.pricetracker.common.model.Price;
 import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ public class ClientOrchestrator {
     }
 
 
-    public ProductEntity scrape(URI url) {
+    public ProductEntity getProduct(URI url) {
 
         ProductEntity product = null;
 
@@ -33,5 +34,14 @@ public class ClientOrchestrator {
         }
 
         return product;
+    }
+
+    public Price getPrice(URI url) {
+
+        return clients.stream()
+                .filter(client -> client.supports(url)) //Filter for supporting client
+                .findFirst()
+                .orElseThrow()
+                .getPrice(url);
     }
 }
