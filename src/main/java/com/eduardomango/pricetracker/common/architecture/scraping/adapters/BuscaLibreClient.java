@@ -26,6 +26,7 @@ public class BuscaLibreClient implements ClientService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
+    private static final Pattern PRICE_PATTERN = Pattern.compile("'price'\\s*:\\s*(\\d+\\.?\\d*)");
 
     public BuscaLibreClient(WebClient.Builder builder , ObjectMapper objectMapper) {
         this.webClient = builder
@@ -42,38 +43,50 @@ public class BuscaLibreClient implements ClientService {
 
     @Override
     public ProductEntity getProduct(URI url) {
+        String html = fetchHtml(url);
+        Document doc = Jsoup.parse(html);
 
+
+        String scriptContent = extractDataLayerScript(doc, url);
+        ProductEntity product = parseDataLayer(scriptContent);
+
+        product.setUrl(new URL(url.toString()));
+        product.setDescription(doc.select("meta[name=description]").attr("content"));
+
+        return product;
+    }
+
+    @Override
+    public Price getPrice(URI url) {
+        String html = fetchHtml(url);
+
+        // Search for the price in the HTML
+        Matcher matcher = PRICE_PATTERN.matcher(html);
+
+        if (matcher.find()) {
+            BigDecimal priceValue = new BigDecimal(matcher.group(1));
+            return new Price(priceValue, "ARS");
+        }
+
+        throw new ParseException("Was unable to find price for: " + url);
+    }
+
+    private String fetchHtml(URI url) {
         if (!supports(url)) throw new UnsuportedWebsite(url.getHost());
 
-        //Retrieve the HTML content of the page
-        String html = webClient.get()
+        return webClient.get()
                 .uri(url)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+    }
 
-
-
-        //Parse the HTML content using Jsoup
-        assert html != null;
-        Document doc = Jsoup.parse(html);
-
-        // Get description. It is outside the dataLayer script
-        String description = doc.select("meta[name=description]").attr("content");
-
-        String scriptContent = doc.select("script").stream()
+    private String extractDataLayerScript(Document doc, URI url) {
+        return doc.select("script").stream()
                 .map(Element::html)
                 .filter(content -> content.contains("dataLayer = [{"))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Product", "Product was not found", "url", url.toString()));
-
-
-        ProductEntity product = parseDataLayer(scriptContent);
-
-        product.setUrl(new URL(url.toString()));
-        product.setDescription(description);
-
-        return product;
     }
 
     private ProductEntity parseDataLayer(String script) {
