@@ -4,8 +4,9 @@ import com.eduardomango.pricetracker.common.model.IMapper;
 import com.eduardomango.pricetracker.user.domain.UserEntity;
 import com.eduardomango.pricetracker.user.domain.dto.NewUserDTO;
 import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface NewUserMapper extends IMapper<UserEntity, NewUserDTO> {
 
     UserEntity toEntity(NewUserDTO newUserDTO);

@@ -5,7 +5,6 @@ import com.eduardomango.pricetracker.common.model.Price;
 import com.eduardomango.pricetracker.common.model.PriceDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.ObjectFactory;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
