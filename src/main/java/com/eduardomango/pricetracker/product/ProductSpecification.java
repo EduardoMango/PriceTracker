@@ -2,7 +2,6 @@ package com.eduardomango.pricetracker.product;
 
 import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import org.springframework.data.jpa.domain.PredicateSpecification;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 

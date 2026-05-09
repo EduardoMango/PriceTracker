@@ -2,7 +2,6 @@ package com.eduardomango.pricetracker.pricehistory;
 
 import com.eduardomango.pricetracker.common.architecture.scraping.ClientOrchestrator;
 import com.eduardomango.pricetracker.common.model.Price;
-import com.eduardomango.pricetracker.pricehistory.domain.PriceHistoryEntity;
 import com.eduardomango.pricetracker.product.ProductRepository;
 import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,8 @@ public class PriceHistoryService {
     private final PriceUpdateService priceUpdater;
 
 
-    @Scheduled(cron = "0 0 9,17 * * *")
+    //@Scheduled(cron = "0 0 9,17 * * *")
+    @Scheduled(fixedDelay = 60000)  
     public void updatePriceHistory() {
         List<ProductEntity> products = productRepository.findAll();
 

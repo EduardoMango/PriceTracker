@@ -4,15 +4,15 @@ import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import com.eduardomango.pricetracker.product.domain.AlertCondition;
 import com.eduardomango.pricetracker.user.domain.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.UUID;
 
 
 @Entity
 @Table(name = "subscriptions")
 @Getter
+@Setter
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
@@ -20,6 +20,9 @@ public class SubscriptionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "external_id", nullable = false, unique = true, updatable = false)
+    private UUID externalId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private UserEntity user;
@@ -42,5 +45,12 @@ public class SubscriptionEntity {
     private AlertCondition alertCondition;
 
 
-    private Boolean active = true;
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
+    private Boolean active;
+
+    @PrePersist
+    void onCreate() {
+        if (externalId == null)
+            externalId = UUID.randomUUID();
+    }
 }
