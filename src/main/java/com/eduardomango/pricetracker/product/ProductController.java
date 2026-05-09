@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import reactor.core.publisher.Mono;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -34,8 +36,8 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductResponse> save(@RequestBody ProductRequest productRequest) {
-        return ResponseEntity.ok(productService.save(productRequest));
+    public Mono<ProductResponse> save(@RequestBody ProductRequest productRequest) {
+        return productService.save(productRequest);
     }
 
     @DeleteMapping("{productId}")

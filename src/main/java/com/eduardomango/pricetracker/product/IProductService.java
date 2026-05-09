@@ -4,6 +4,8 @@ package com.eduardomango.pricetracker.product;
 import com.eduardomango.pricetracker.product.domain.dto.ProductRequest;
 import com.eduardomango.pricetracker.product.domain.dto.ProductResponse;
 
+import reactor.core.publisher.Mono;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +20,7 @@ public interface IProductService {
 
     ProductResponse getProductById(UUID productId);
 
-    ProductResponse save(ProductRequest productRequest);
+    Mono<ProductResponse> save(ProductRequest productRequest);
 
     void delete(UUID productId);
 }

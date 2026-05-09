@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -41,46 +42,42 @@ public class LibreriaPalitoClient implements ClientService {
     }
 
     @Override
-    public ProductEntity getProduct(URI url) {
-        String html = fetchHtml(url);
-        Document doc = Jsoup.parse(html);
+    public Mono<ProductEntity> getProduct(URI url) {
+        return fetchHtml(url).map(html -> {
+            Document doc = Jsoup.parse(html);
 
-        // Extraemos el script completo para el primer registro del producto
-        String scriptContent = extractProductDetailScript(doc);
+            // Extraemos el script completo para el primer registro del producto
+            String scriptContent = extractProductDetailScript(doc);
 
-        ProductEntity p = parseProductDetail(scriptContent);
-        p.setUrl(new URL(url.toString()));
-        p.setDescription(doc.select("meta[name=description]").attr("content"));
+            ProductEntity p = parseProductDetail(scriptContent);
+            p.setUrl(new URL(url.toString()));
+            p.setDescription(doc.select("meta[name=description]").attr("content"));
 
-        return p;
+            return p;
+        });
     }
 
     @Override
-    public Price getPrice(URI url) {
-        String html = fetchHtml(url);
+    public Mono<Price> getPrice(URI url) {
+        return fetchHtml(url).map(html -> {
+            // Use regex to find the price
+            Matcher matcher = PRICE_PATTERN.matcher(html);
+            if (matcher.find()) {
+                return new Price(new BigDecimal(matcher.group(1)), "ARS");
+            }
 
-        // Use regex to find the price
-        Matcher matcher = PRICE_PATTERN.matcher(html);
-        if (matcher.find()) {
-            return new Price(new BigDecimal(matcher.group(1)), "ARS");
-        }
-
-        // If price is not found, you can log the HTML snippet for debugging
-        // System.out.println("HTML Snippet: " + html.substring(0, Math.min(html.length(), 1000)));
-        throw new ParseException("Price not found in HTML: ");
+            throw new ParseException("Price not found in HTML: ");
+        });
     }
 
-    private String fetchHtml(URI url) {
-        if (!supports(url)) throw new UnsuportedWebsite(url.getHost());
+    private Mono<String> fetchHtml(URI url) {
+        if (!supports(url)) return Mono.error(new UnsuportedWebsite(url.getHost()));
 
-        String html = webClient.get()
+        return webClient.get()
                 .uri(url)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        if (html == null) throw new ParseException("Null html response from Libreria Palito");
-        return html;
+                .switchIfEmpty(Mono.error(new ParseException("Empty html response from Libreria Palito")));
     }
 
     private String extractProductDetailScript(Document doc) {

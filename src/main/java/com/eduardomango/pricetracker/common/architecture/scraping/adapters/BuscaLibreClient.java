@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -28,12 +29,11 @@ public class BuscaLibreClient implements ClientService {
     private final ObjectMapper objectMapper;
     private static final Pattern PRICE_PATTERN = Pattern.compile("'price'\\s*:\\s*(\\d+\\.?\\d*)");
 
-    public BuscaLibreClient(WebClient.Builder builder , ObjectMapper objectMapper) {
+    public BuscaLibreClient(WebClient.Builder builder, ObjectMapper objectMapper) {
         this.webClient = builder
                 .baseUrl("https://www.buscalibre.com.ar")
                 .build();
         this.objectMapper = objectMapper;
-
     }
 
     @Override
@@ -42,43 +42,42 @@ public class BuscaLibreClient implements ClientService {
     }
 
     @Override
-    public ProductEntity getProduct(URI url) {
-        String html = fetchHtml(url);
-        Document doc = Jsoup.parse(html);
+    public Mono<ProductEntity> getProduct(URI url) {
+        return fetchHtml(url).map(html -> {
+            Document doc = Jsoup.parse(html);
 
+            String scriptContent = extractDataLayerScript(doc, url);
+            ProductEntity product = parseDataLayer(scriptContent);
 
-        String scriptContent = extractDataLayerScript(doc, url);
-        ProductEntity product = parseDataLayer(scriptContent);
+            product.setUrl(new URL(url.toString()));
+            product.setDescription(doc.select("meta[name=description]").attr("content"));
 
-        product.setUrl(new URL(url.toString()));
-        product.setDescription(doc.select("meta[name=description]").attr("content"));
-
-        return product;
+            return product;
+        });
     }
 
     @Override
-    public Price getPrice(URI url) {
-        String html = fetchHtml(url);
+    public Mono<Price> getPrice(URI url) {
+        return fetchHtml(url).map(html -> {
+            // Search for the price in the HTML
+            Matcher matcher = PRICE_PATTERN.matcher(html);
 
-        // Search for the price in the HTML
-        Matcher matcher = PRICE_PATTERN.matcher(html);
+            if (matcher.find()) {
+                BigDecimal priceValue = new BigDecimal(matcher.group(1));
+                return new Price(priceValue, "ARS");
+            }
 
-        if (matcher.find()) {
-            BigDecimal priceValue = new BigDecimal(matcher.group(1));
-            return new Price(priceValue, "ARS");
-        }
-
-        throw new ParseException("Was unable to find price for: " + url);
+            throw new ParseException("Was unable to find price for: " + url);
+        });
     }
 
-    private String fetchHtml(URI url) {
-        if (!supports(url)) throw new UnsuportedWebsite(url.getHost());
+    private Mono<String> fetchHtml(URI url) {
+        if (!supports(url)) return Mono.error(new UnsuportedWebsite(url.getHost()));
 
         return webClient.get()
                 .uri(url)
                 .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                .bodyToMono(String.class);
     }
 
     private String extractDataLayerScript(Document doc, URI url) {

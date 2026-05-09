@@ -9,6 +9,7 @@ import com.eduardomango.pricetracker.product.domain.dto.ProductResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.PredicateSpecification;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -56,12 +57,11 @@ public class ProductService implements IProductService{
     }
 
     @Override
-    public ProductResponse save(ProductRequest productRequest) {
+    public Mono<ProductResponse> save(ProductRequest productRequest) {
 
-        ProductEntity toBeSaved = clientOrchestrator.getProduct(URI.create(productRequest.url().value()));
-        ProductEntity saved = productRepository.save(toBeSaved);
-
-        return responseMapper.toDTO(saved);
+        return clientOrchestrator.getProduct(URI.create(productRequest.url().value()))
+                .map(productRepository::save)
+                .map(responseMapper::toDTO);
     }
 
     @Override

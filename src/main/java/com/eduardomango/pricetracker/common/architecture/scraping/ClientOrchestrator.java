@@ -4,6 +4,7 @@ import com.eduardomango.pricetracker.common.exceptions.UnsuportedWebsite;
 import com.eduardomango.pricetracker.common.model.Price;
 import com.eduardomango.pricetracker.product.domain.ProductEntity;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.List;
@@ -18,30 +19,21 @@ public class ClientOrchestrator {
     }
 
 
-    public ProductEntity getProduct(URI url) {
-
-        ProductEntity product = null;
-
-        for (ClientService clientService : clients) {
-            if (clientService.supports(url)) {
-                product = clientService.getProduct(url);
-                break;
-            }
-        }
-
-        if (product == null) {
-            throw new UnsuportedWebsite(url.getHost());
-        }
-
-        return product;
-    }
-
-    public Price getPrice(URI url) {
+    public Mono<ProductEntity> getProduct(URI url) {
 
         return clients.stream()
-                .filter(client -> client.supports(url)) //Filter for supporting client
+                .filter(client -> client.supports(url))
                 .findFirst()
-                .orElseThrow()
-                .getPrice(url);
+                .map(client -> client.getProduct(url))
+                .orElseGet(() -> Mono.error(new UnsuportedWebsite(url.getHost())));
+    }
+
+    public Mono<Price> getPrice(URI url) {
+
+        return clients.stream()
+                .filter(client -> client.supports(url))
+                .findFirst()
+                .map(client -> client.getPrice(url))
+                .orElseGet(() -> Mono.error(new UnsuportedWebsite(url.getHost())));
     }
 }
