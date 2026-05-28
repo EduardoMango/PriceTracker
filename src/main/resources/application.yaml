@@ -9,9 +9,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
   mail:
     host: mailhog
     port: 1025
+
   jackson:
     json:
       read:

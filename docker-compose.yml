@@ -12,7 +12,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -28,6 +28,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: Tj}0&J>s9H&cjzYpc2ljG@Mq2r?7^>&Gaceowu{L9ZM
+      JWT_EXPIRATION: 86400000
     restart: always
 
   mailhog:

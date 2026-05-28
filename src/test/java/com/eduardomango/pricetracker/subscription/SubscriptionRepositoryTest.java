@@ -17,12 +17,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@ActiveProfiles("test") // Use a test profile to ensure H2 is used if configured
+@ActiveProfiles("test")
 class SubscriptionRepositoryTest {
 
     @Autowired
@@ -46,7 +45,8 @@ class SubscriptionRepositoryTest {
         product.setUrl(new URL("https://example.com"));
         product = productRepository.save(product);
 
-        AlertCondition condition = new AlertCondition(new Price(new BigDecimal("10"), "USD"), ComparisonType.LOWER_THAN);
+        AlertCondition condition = new AlertCondition(new Price(new BigDecimal("10"), "USD"),
+                ComparisonType.LOWER_THAN);
 
         SubscriptionEntity activeSub = new SubscriptionEntity();
         activeSub.setUser(user);

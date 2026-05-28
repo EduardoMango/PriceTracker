@@ -27,11 +27,6 @@ public class UserController {
         return ResponseEntity.ok(userService.findById(userId));
     }
 
-    @PostMapping
-    ResponseEntity<UserDTO> create(@RequestBody NewUserDTO newUserDTO) {
-        return new ResponseEntity<>(userService.save(newUserDTO), HttpStatus.CREATED);
-    }
-
     @PutMapping("/{userId}")
     ResponseEntity<UserDTO> update(@PathVariable UUID userId, @RequestBody NewUserDTO newUserDTO) {
         return ResponseEntity.ok(userService.update(userId, newUserDTO));
