@@ -29,6 +29,25 @@ public class UserService implements IUserService{
         return userMapper.toDTO(saved);
     }
 
+//    @Override
+//    @Transactional
+//    public UserDTO save(NewAccountRequest newAccountRequest) {
+//
+//        NewUserDTO newUser = new NewUserDTO(new Email(newAccountRequest.email()));
+//
+//        UserEntity saved = userRepository.save(newUserMapper.toEntity(newUser));
+//
+//        CredentialsEntity newCredentials = CredentialsEntity.builder().roles(Set.of(roleRepository.findById(1L).orElseThrow()))
+//                .enabled(true)
+//                .username(newAccountRequest.username())
+//                .password(passwordEncoder.encode(newAccountRequest.password()))
+//                .build();
+//
+//        credentialsRepository.save(newCredentials);
+//
+//        return userMapper.toDTO(saved);
+//    }
+
     @Override
     public void delete(UUID userId) {
         UserEntity user = userRepository.findByExternalId(userId)
