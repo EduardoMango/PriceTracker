@@ -5,6 +5,7 @@ import com.eduardomango.pricetracker.user.domain.dto.UserDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,17 +27,13 @@ public class UserController {
     ResponseEntity<UserDTO> findById(@PathVariable UUID userId) {
         return ResponseEntity.ok(userService.findById(userId));
     }
-
-    @PostMapping
-    ResponseEntity<UserDTO> create(@RequestBody NewUserDTO newUserDTO) {
-        return new ResponseEntity<>(userService.save(newUserDTO), HttpStatus.CREATED);
-    }
-
+    @PreAuthorize("hasRole('ADMIN') or #newUserDTO.email == authentication.email")
     @PutMapping("/{userId}")
     ResponseEntity<UserDTO> update(@PathVariable UUID userId, @RequestBody NewUserDTO newUserDTO) {
         return ResponseEntity.ok(userService.update(userId, newUserDTO));
     }
 
+    @PreAuthorize("#userId == authentication.principal.id")
     @DeleteMapping("/{userId}")
     ResponseEntity<Void> delete(@PathVariable UUID userId) {
         userService.delete(userId);
