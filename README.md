@@ -276,7 +276,7 @@ Configuration is externalized in `src/main/resources/application.yaml` and can b
 
 1. Clone the repository and navigate to the project directory:
    ```bash
-   git clone <REPOSITORY_URL>
+   git clone https://github.com/EduardoMango/PriceTracker
    cd PriceTracker
    ```
 

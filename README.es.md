@@ -267,7 +267,7 @@ La aplicacion define valores predeterminados para desarrollo local y permite sob
 
 1. Clonar el repositorio y situarse en la raiz del proyecto:
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
+   git clone https://github.com/EduardoMango/PriceTracker
    cd PriceTracker
    ```
 
